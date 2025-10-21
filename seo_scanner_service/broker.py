@@ -5,8 +5,8 @@ from faststream.rabbit import RabbitBroker
 from pydantic import BaseModel, HttpUrl, NonNegativeInt
 
 from .database import add_pages, create_site
-from .schemas import Site
 from .scanner import scan_site_seo_optimization
+from .schemas import Site
 from .settings import settings
 
 
@@ -22,14 +22,14 @@ class CompletedScanEvent(BaseModel):
 
 broker = RabbitBroker(url=settings.rabbitmq.url)
 
-app = FastStream(broker)
+faststream_app = FastStream(broker)
 
 
 @broker.subscriber("start_scan")
-@broker.publisher("completed_seo_scan")
+@broker.publisher("completed_scan")
 async def handle_start_seo_scan(event: StartScanEvent) -> CompletedScanEvent:
     pages = await scan_site_seo_optimization(event.url)
     site = Site(url=event.url, page_count=len(pages))
     await create_site(site)
-    await add_pages(pages)
+    await add_pages(site.id, pages)
     return CompletedScanEvent(site_id=site.id, url=site.url, page_count=site.page_count)

@@ -1,14 +1,10 @@
-import asyncio
 import logging
 
-from seo_scanner_service.broker import app
+import uvicorn
 
-
-async def main() -> None:
-    await app.broker.start()
-    await app.broker.publish(message={"site_url": "http://www.diocon.ru/"}, queue="start_seo_scan")
-
+from seo_scanner_service.api import app
+from seo_scanner_service.settings import settings
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
-    asyncio.run(main())
+    uvicorn.run(app, host="0.0.0.0", port=settings.app.port, log_level="info")  # noqa: S104

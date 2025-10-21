@@ -9,10 +9,10 @@ from alembic import context
 
 from seo_scanner_service.database import (
     Base,
-    ScannedSiteModel,
-    ScannedPageModel,
+    SiteModel,
+    PageModel,
     PageContentModel,
-    SEOFindingModel,
+    SEOLogModel,
 )
 from seo_scanner_service.settings import settings
 

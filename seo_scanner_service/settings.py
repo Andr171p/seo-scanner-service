@@ -11,6 +11,10 @@ ENV_PATH = BASE_DIR / ".env"
 load_dotenv(ENV_PATH)
 
 
+class AppSettings(BaseSettings):
+    port: int = 8000
+
+
 class EmbeddingsSettings(BaseSettings):
     base_url: str = "http://127.0.0.1:8000"
 
@@ -49,6 +53,7 @@ class Settings(BaseSettings):
     embeddings: EmbeddingsSettings = EmbeddingsSettings()
     rabbitmq: RabbitMQSettings = RabbitMQSettings()
     postgres: PostgresSettings = PostgresSettings()
+    app: AppSettings = AppSettings()
 
 
 settings: Final[Settings] = Settings()

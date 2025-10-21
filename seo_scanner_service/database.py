@@ -70,9 +70,7 @@ class PageModel(Base):
     site_id: Mapped[UUID] = mapped_column(ForeignKey("sites.id"), unique=False)
     url: Mapped[str]
     rendering_time: Mapped[int]
-    seo_logs: Mapped[list["SEOLogModel"]] = relationship(
-        back_populates="page", uselist=False
-    )
+    seo_logs: Mapped[list["SEOLogModel"]] = relationship(back_populates="page")
     content: Mapped["PageContentModel"] = relationship(
         back_populates="page", uselist=False
     )
@@ -122,7 +120,7 @@ async def add_pages(site_id: UUID, pages: list[Page]) -> None:
                     rendering_time=page.rendering_time,
                     seo_logs=[
                         SEOLogModel(
-                            id=page.id,
+                            page_id=page.id,
                             level=seo_log.level,
                             message=seo_log.message,
                             category=seo_log.category,
@@ -131,7 +129,7 @@ async def add_pages(site_id: UUID, pages: list[Page]) -> None:
                         for seo_log in page.seo_logs
                     ],
                     content=PageContentModel(
-                        id=page.id,
+                        page_id=page.id,
                         meta=page.content.meta.model_dump(),
                         text=page.content.text,
                     )
