@@ -4,9 +4,8 @@ from faststream import FastStream
 from faststream.rabbit import RabbitBroker
 from pydantic import BaseModel, HttpUrl, NonNegativeInt
 
-from .database import add_pages, create_site
-from .scanner import scan_site_seo_optimization
-from .schemas import Site
+from .database.quieries import persist_website
+from .scanner import scan_website_seo_optimization
 from .settings import settings
 
 
@@ -15,7 +14,7 @@ class StartScanEvent(BaseModel):
 
 
 class CompletedScanEvent(BaseModel):
-    site_id: UUID
+    website_id: UUID
     url: HttpUrl
     page_count: NonNegativeInt
 
@@ -28,8 +27,8 @@ faststream_app = FastStream(broker)
 @broker.subscriber("start_scan")
 @broker.publisher("completed_scan")
 async def handle_start_seo_scan(event: StartScanEvent) -> CompletedScanEvent:
-    pages = await scan_site_seo_optimization(event.url)
-    site = Site(url=event.url, page_count=len(pages))
-    await create_site(site)
-    await add_pages(site.id, pages)
-    return CompletedScanEvent(site_id=site.id, url=site.url, page_count=site.page_count)
+    website = await scan_website_seo_optimization(event.url)
+    await persist_website(website)
+    return CompletedScanEvent(
+        website_id=website.id, url=website.url, page_count=website.page_count
+    )

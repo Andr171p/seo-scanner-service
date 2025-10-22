@@ -8,7 +8,7 @@ from playwright.async_api import Page
 
 from ..schemas import LogLevel, SEOLog
 from .nlp import compare_texts
-from .parsers import extract_clean_text
+from .parsers import extract_markdown_text
 
 logger = logging.getLogger(__name__)
 
@@ -259,7 +259,7 @@ def check_meta_and_body_relevance(soup: BeautifulSoup) -> list[SEOLog]:
             category="semantic",
             element="body"
         )]
-    text = extract_clean_text(soup)
+    text = extract_markdown_text(soup)
     similarity_score = compare_texts(content, text)
     if CRITICAL_RELEVANCE_SCORE < similarity_score < SHORT_RELEVANCE_SCORE:
         findings.append(SEOLog(

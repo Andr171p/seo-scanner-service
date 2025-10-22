@@ -4,7 +4,7 @@ from playwright.async_api import TimeoutError as PlaywrightTimeoutError
 from playwright.async_api import async_playwright
 from pydantic import HttpUrl
 
-from ..schemas import Page, PageContent
+from ..schemas import Page, PageContent, Website
 from .linting import lint_page
 from .parsers import extract_page_meta, extract_page_text
 from .performance import measure_page_rendering_time
@@ -14,7 +14,7 @@ from .utils import iter_pages, scroll_page_to_bottom
 logger = logging.getLogger(__name__)
 
 
-async def scan_site_seo_optimization(url: HttpUrl) -> list[Page]:
+async def scan_website_seo_optimization(url: HttpUrl) -> Website:
     """Сканирует SEO оптимизацию сайта"""
     tree = build_site_tree(url)
     urls = extract_key_pages(tree, list(PRIORITY_KEYWORDS), max_result=15)
@@ -37,4 +37,4 @@ async def scan_site_seo_optimization(url: HttpUrl) -> list[Page]:
             except (PlaywrightTimeoutError, TimeoutError):
                 logger.warning("Very long page loading time, skip to net page")
                 continue
-    return scanned_pages
+    return Website.from_pages(url, scanned_pages)
