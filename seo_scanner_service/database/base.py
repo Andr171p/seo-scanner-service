@@ -51,3 +51,8 @@ class Base(AsyncAttrs, DeclarativeBase):
     id: Mapped[UUIDPrimary]
     created_at: Mapped[DatetimeDefault]
     updated_at: Mapped[DatetimeOnupdate]
+
+
+async def create_tables() -> None:
+    async with engine.begin() as connection:
+        await connection.run_sync(Base.metadata.create_all)

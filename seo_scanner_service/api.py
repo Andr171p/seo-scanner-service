@@ -7,12 +7,14 @@ from uuid import UUID
 from fastapi import FastAPI, HTTPException, status
 
 from .broker import faststream_app
+from .database.base import create_tables
 from .database.quieries import read_website
 from .schemas import Website
 
 
 @asynccontextmanager
 async def lifespan(_: FastAPI) -> AsyncGenerator[None]:
+    await create_tables()
     await faststream_app.broker.start()
     await faststream_app.broker.publish({"url": "http://www.diocon.ru/"}, queue="start_scan")
     yield
