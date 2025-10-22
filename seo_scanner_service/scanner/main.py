@@ -14,13 +14,13 @@ from .utils import iter_pages, scroll_page_to_bottom
 logger = logging.getLogger(__name__)
 
 
-async def scan_website_seo_optimization(url: HttpUrl) -> Website:
+async def scan_website_seo_optimization(url: HttpUrl, headless: bool = True) -> Website:
     """Сканирует SEO оптимизацию сайта"""
     tree = build_site_tree(url)
     urls = extract_key_pages(tree, list(PRIORITY_KEYWORDS), max_result=15)
     scanned_pages: list[Page] = []
     async with async_playwright() as playwright:
-        browser = await playwright.chromium.launch(headless=False)
+        browser = await playwright.chromium.launch(headless=headless)
         async for page in iter_pages(browser, urls):
             try:
                 rendering_info = await measure_page_rendering_time(page, page.url)
