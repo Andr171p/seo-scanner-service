@@ -4,11 +4,11 @@ from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from uuid import UUID
 
-from fastapi import FastAPI, status
+from fastapi import FastAPI, HTTPException, status
 
 from .broker import faststream_app
-from .database import get_pages
-from .schemas import Page
+from .database.quieries import read_website
+from .schemas import Website
 
 
 @asynccontextmanager
@@ -23,10 +23,13 @@ app: Final[FastAPI] = FastAPI(lifespan=lifespan)
 
 
 @app.get(
-    path="/api/v1/sites/{site_id}/pages",
+    path="/api/v1/websites/{id}",
     status_code=status.HTTP_200_OK,
-    response_model=list[Page],
-    summary="Получение всех отсканированных страниц сайта",
+    response_model=Website,
+    summary="Получение отсканированного сайта",
 )
-async def get_site_pages(site_id: UUID) -> list[Page]:
-    return await get_pages(site_id)
+async def get_website(id: UUID) -> Website:  # noqa: A002
+    website = await read_website(id)
+    if website is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Website not found")
+    return website

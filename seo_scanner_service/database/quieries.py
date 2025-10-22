@@ -38,7 +38,7 @@ async def persist_website(website: Website) -> None:
         raise WritingError(f"Error while persisting website, error: {e}") from e
 
 
-async def get_website(id: UUID) -> Website:  # noqa: A002
+async def read_website(id: UUID) -> Website | None:  # noqa: A002
     try:
         async with sessionmaker() as session:
             stmt = (

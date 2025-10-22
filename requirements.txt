@@ -1,0 +1,17 @@
+uvicorn~=0.38.0
+pydantic~=2.12.3
+SQLAlchemy~=2.0.44
+alembic~=1.17.0
+fastapi~=0.119.1
+nltk~=3.9.2
+numpy>=1.24.0,<2.0.0
+langchain-core~=1.0.0
+langchain-text-splitters~=1.0.0
+scikit-learn~=1.7.2
+playwright~=1.55.0
+tqdm~=4.67.1
+bs4~=0.0.2
+beautifulsoup4~=4.14.2
+faststream~=0.6.1
+python-dotenv~=1.1.1
+pydantic-settings~=2.11.0
