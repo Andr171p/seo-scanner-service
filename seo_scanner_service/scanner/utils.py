@@ -1,5 +1,9 @@
+from typing import Any, TypeVar
+
 import logging
-from collections.abc import AsyncIterator
+import time
+from collections.abc import AsyncIterator, Callable
+from functools import wraps
 
 from playwright.async_api import Browser, Page
 from pydantic import HttpUrl
@@ -13,6 +17,39 @@ MIN_SCROLL_ATTEMPT = 10
 LARGE_PAGE_SCROLL_STEP = 1000
 
 logger = logging.getLogger(__name__)
+
+T = TypeVar("T")
+
+
+def timer[T](func: Callable[..., T]) -> Callable[..., T]:
+    """Декоратор для замера времени выполнения функции"""
+
+    @wraps(func)
+    async def async_wrapper(*args: Any, **kwargs: Any) -> T:
+        start_time = time.perf_counter()
+        try:
+            return await func(*args, **kwargs)
+        finally:
+            end_time = time.perf_counter()
+            execution_time = end_time - start_time
+            logger.info(
+                "Function '%s' executed in %s seconds",
+                func.__name__, round(execution_time, 2)
+            )
+
+    @wraps(func)
+    def sync_wrapper(*args, **kwargs) -> T:
+        start_time = time.perf_counter()
+        try:
+            return func(*args, **kwargs)
+        finally:
+            end_time = time.perf_counter()
+            execution_time = end_time - start_time
+            logger.info(
+                "Function '%s' executed in %s seconds",
+                func.__name__, round(execution_time, 2)
+            )
+    return async_wrapper if hasattr(func, "__await__") else sync_wrapper
 
 
 async def get_current_page(browser: Browser) -> Page:

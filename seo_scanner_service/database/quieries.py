@@ -38,6 +38,29 @@ async def persist_website(website: Website) -> None:
         raise WritingError(f"Error while persisting website, error: {e}") from e
 
 
+async def read_all_websites(page: int, limit: int) -> list[Website]:
+    try:
+        async with sessionmaker() as session:
+            offset = (page - 1) * limit
+            stmt = (
+                select(WebsiteModel)
+                .options(
+                    joinedload(WebsiteModel.pages)
+                    .options(
+                        joinedload(PageModel.seo_logs),
+                        joinedload(PageModel.content)
+                    )
+                )
+                .offset(offset)
+                .limit(limit)
+            )
+            results = await session.execute(stmt)
+            models = results.unique().scalars().all()
+        return [Website.model_validate(model) for model in models]
+    except SQLAlchemyError as e:
+        raise ReadingError(f"Error while reading websites, error: {e}") from e
+
+
 async def read_website(id: UUID) -> Website | None:  # noqa: A002
     try:
         async with sessionmaker() as session:

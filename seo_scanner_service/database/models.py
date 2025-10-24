@@ -13,7 +13,7 @@ class WebsiteModel(Base):
     seo_score: Mapped[float]
     page_count: Mapped[int]
 
-    pages: Mapped[list["PageModel"]] = relationship(back_populates="site")
+    pages: Mapped[list["PageModel"]] = relationship(back_populates="website")
 
 
 class PageModel(Base):

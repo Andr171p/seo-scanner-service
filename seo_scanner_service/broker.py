@@ -13,7 +13,7 @@ class StartScanEvent(BaseModel):
     url: HttpUrl
 
 
-class CompletedScanEvent(BaseModel):
+class ScanCompletedEvent(BaseModel):
     website_id: UUID
     url: HttpUrl
     page_count: NonNegativeInt
@@ -25,10 +25,10 @@ faststream_app = FastStream(broker)
 
 
 @broker.subscriber("start_scan")
-@broker.publisher("completed_scan")
-async def handle_start_seo_scan(event: StartScanEvent) -> CompletedScanEvent:
+@broker.publisher("scan_completed")
+async def handle_start_seo_scan(event: StartScanEvent) -> ScanCompletedEvent:
     website = await scan_website_seo_optimization(event.url)
     await persist_website(website)
-    return CompletedScanEvent(
+    return ScanCompletedEvent(
         website_id=website.id, url=website.url, page_count=website.page_count
     )

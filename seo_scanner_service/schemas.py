@@ -38,17 +38,23 @@ class SEOLog(BaseModel):
     category: str
     element: str
 
+    model_config = ConfigDict(from_attributes=True)
+
 
 class PageMeta(BaseModel):
     """Meta-контент на странице (находиться в head)"""
     title: str
     description: str
 
+    model_config = ConfigDict(from_attributes=True)
+
 
 class PageContent(BaseModel):
     """Текстовый контент на странице"""
     meta: PageMeta
     text: str = ""
+
+    model_config = ConfigDict(from_attributes=True)
 
 
 class Page(_Entity):
