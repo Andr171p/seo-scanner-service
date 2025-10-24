@@ -178,16 +178,13 @@ def check_images(soup: BeautifulSoup) -> list[SEOLog]:
             element="img"
         )]
     images_with_alt = 0  # Количество изображений с описанием
-    images_without_description = 0  # Изображения без описания
+    images_without_alt = 0  # Количество изображений без атрибута alt
+    images_without_description = 0  # Изображения без описания в названии файла
+
     for image in images:
         alt, src = image.get("alt", ""), image.get("src", "")
         if not alt:
-            findings.append(SEOLog(
-                level=LogLevel.WARNING,
-                message="Изображение без атрибута 'alt'",
-                category="image",
-                element="img"
-            ))
+            images_without_alt += 1
         else:
             images_with_alt += 1
         if (
@@ -196,19 +193,37 @@ def check_images(soup: BeautifulSoup) -> list[SEOLog]:
                     for type in ["image", "img", "picture"])  # noqa: A001
                 )
                 and not any(
-                    extension in src.lower()
-                    for extension in [".jpg", ".jpeg", ".png", ".webp"]
-            )
+            extension in src.lower()
+            for extension in [".jpg", ".jpeg", ".png", ".webp"]
+        )
         ):
             images_without_description += 1
-    if images_without_description > 0:
+    # Добавляем один лог для изображений без alt
+    if images_without_alt > 0:
         findings.append(SEOLog(
             level=LogLevel.WARNING,
-            message=f"В названии файлов {images_without_description}"
-            " изображений нет описания!",
+            message=f"Найдено {images_without_alt} изображений без атрибута 'alt'",
             category="image",
             element="img"
         ))
+
+    # Добавляем лог для изображений с alt (опционально, для информации)
+    if images_with_alt > 0:
+        findings.append(SEOLog(
+            level=LogLevel.GOOD,
+            message=f"Найдено {images_with_alt} изображений с атрибутом 'alt'",
+            category="image",
+            element="img"
+        ))
+
+    if images_without_description > 0:
+        findings.append(SEOLog(
+            level=LogLevel.WARNING,
+            message=f"В названии файлов {images_without_description} изображений нет описания!",
+            category="image",
+            element="img"
+        ))
+
     return findings
 
 
@@ -216,17 +231,20 @@ def check_semantic_structure(soup: BeautifulSoup) -> list[SEOLog]:
     """Проверка семантической структуры"""
     findings: list[SEOLog] = []
     used_semantic_tags: list[str] = []
+    unused_semantic_tags: list[str] = []
     for semantic_tag in SEMANTIC_TAGS:
         elements = soup.find_all(semantic_tag)
         if not elements:
-            findings.append(SEOLog(
-                level=LogLevel.INFO,
-                message=f"Не используется сематический тег <{semantic_tag}>",
-                category="semantic",
-                element=semantic_tag
-            ))
+            unused_semantic_tags.append(semantic_tag)
         else:
             used_semantic_tags.append(semantic_tag)
+    if unused_semantic_tags:
+        findings.append(SEOLog(
+            level=LogLevel.INFO,
+            message=f"Не используются семантические теги: {', '.join(unused_semantic_tags)}",
+            category="semantic",
+            element=";".join(unused_semantic_tags)
+        ))
     if used_semantic_tags:
         findings.append(SEOLog(
             level=LogLevel.GOOD,

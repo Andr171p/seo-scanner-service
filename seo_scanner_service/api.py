@@ -5,11 +5,11 @@ from contextlib import asynccontextmanager
 from uuid import UUID
 
 from fastapi import FastAPI, HTTPException, Query, status
-from pydantic import PositiveInt
+from pydantic import HttpUrl, PositiveInt
 
 from .broker import faststream_app
 from .database.base import create_tables
-from .database.quieries import read_all_websites, read_website
+from .database.quieries import read_all_websites_url, read_website, read_websites_by_url
 from .schemas import LogLevelDistribution, Website
 
 
@@ -17,7 +17,7 @@ from .schemas import LogLevelDistribution, Website
 async def lifespan(_: FastAPI) -> AsyncGenerator[None]:
     await create_tables()
     await faststream_app.broker.start()
-    await faststream_app.broker.publish({"url": "http://www.diocon.ru/"}, queue="start_scan")
+    await faststream_app.broker.publish({"url": "https://corada.ru/"}, queue="start_scan")
     yield
     await faststream_app.broker.stop()
 
@@ -26,15 +26,25 @@ app: Final[FastAPI] = FastAPI(lifespan=lifespan)
 
 
 @app.get(
+    path="/api/v1/websites/urls",
+    status_code=status.HTTP_200_OK,
+    response_model=list[HttpUrl],
+    summary="Получение всех отсканированных сайтов",
+)
+async def get_websites_url(
+        page: PositiveInt = Query(...), limit: PositiveInt = Query(...)
+) -> list[str]:
+    return await read_all_websites_url(page, limit)
+
+
+@app.get(
     path="/api/v1/websites",
     status_code=status.HTTP_200_OK,
     response_model=list[Website],
-    summary="Получение всех отсканированных сайтов",
+    summary="Получение по URL"
 )
-async def get_websites(
-        page: PositiveInt = Query(...), limit: PositiveInt = Query(...)
-) -> list[Website]:
-    return await read_all_websites(page, limit)
+async def get_websites_by_url(url: HttpUrl = Query(...)) -> list[Website]:
+    return await read_websites_by_url(str(url))
 
 
 @app.get(

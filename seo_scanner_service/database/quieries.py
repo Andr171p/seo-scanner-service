@@ -38,25 +38,18 @@ async def persist_website(website: Website) -> None:
         raise WritingError(f"Error while persisting website, error: {e}") from e
 
 
-async def read_all_websites(page: int, limit: int) -> list[Website]:
+async def read_all_websites_url(page: int, limit: int) -> list[str]:
     try:
         async with sessionmaker() as session:
             offset = (page - 1) * limit
             stmt = (
-                select(WebsiteModel)
-                .options(
-                    joinedload(WebsiteModel.pages)
-                    .options(
-                        joinedload(PageModel.seo_logs),
-                        joinedload(PageModel.content)
-                    )
-                )
+                select(WebsiteModel.url)
                 .offset(offset)
                 .limit(limit)
+                .order_by(WebsiteModel.created_at.desc())
             )
             results = await session.execute(stmt)
-            models = results.unique().scalars().all()
-        return [Website.model_validate(model) for model in models]
+            return list(set(results.scalars().all()))
     except SQLAlchemyError as e:
         raise ReadingError(f"Error while reading websites, error: {e}") from e
 
@@ -76,7 +69,29 @@ async def read_website(id: UUID) -> Website | None:  # noqa: A002
                 .where(WebsiteModel.id == id)
             )
             result = await session.execute(stmt)
-            model = result.scalar_one_or_none()
+            model = result.unique().scalar_one_or_none()
             return Website.model_validate(model) if model else None
     except SQLAlchemyError as e:
         raise ReadingError(f"Error while reading pages, error: {e}") from e
+
+
+async def read_websites_by_url(url: str) -> list[Website]:
+    try:
+        async with sessionmaker() as session:
+            stmt = (
+                select(WebsiteModel)
+                .options(
+                    joinedload(WebsiteModel.pages)
+                    .options(
+                        joinedload(PageModel.seo_logs),
+                        joinedload(PageModel.content)
+                    )
+                )
+                .where(WebsiteModel.url == url)
+                .order_by(WebsiteModel.created_at.desc())
+            )
+            results = await session.execute(stmt)
+            models = results.unique().scalars().all()
+        return [Website.model_validate(model) for model in models]
+    except SQLAlchemyError as e:
+        raise ReadingError(f"Error while reading by URL {url}, error: {e}") from e
